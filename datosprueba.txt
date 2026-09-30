@@ -1,0 +1,162 @@
+BASES DE DATOS 2 - API DE PRUEBA
+================================
+
+Proyecto: API REST para administrar cursos, profesores y estudiantes.
+Base de datos local: prueba-colegio
+Coleccion: cursos
+API local: http://localhost:3000
+
+ESTRUCTURA Y RESPONSABILIDAD DE CADA ARCHIVO
+--------------------------------------------
+
+server.js
+  Punto de entrada. Carga .env, configura Express para recibir JSON,
+  conecta con MongoDB e incorpora las rutas de cursos.
+
+models/curso.js
+  Define la estructura de los documentos: nombre y descripcion del curso,
+  un profesor y una lista de estudiantes. Profesor y estudiantes tienen
+  nombre y email.
+
+routes/cursos.js
+  Implementa las operaciones CRUD:
+    POST   /cursos      Crear un curso.
+    GET    /cursos      Consultar todos los cursos.
+    GET    /cursos/:id  Consultar un curso por su ID.
+    PUT    /cursos/:id  Actualizar los campos enviados de un curso.
+    DELETE /cursos/:id  Eliminar un curso.
+
+prueba-crud.js (archivo de prueba que crearas en la raiz del proyecto)
+  Cliente Node.js para probar POST, GET, PUT y DELETE desde la terminal
+  integrada de VS Code. Envia solicitudes a la API local. La logica CRUD
+  y el acceso a MongoDB siguen en routes/cursos.js y models/curso.js.
+
+seed.js
+  Carga diez cursos de ejemplo, cada uno con un profesor y tres estudiantes.
+  IMPORTANTE: antes de cargarlos, elimina los documentos de la coleccion.
+  No ejecutes npm run seed si quieres conservar cursos que hayas creado.
+
+.env
+  Configuracion local de MongoDB y puerto. No compartir ni subir este archivo
+  al repositorio.
+
+package.json
+  Contiene las dependencias y los comandos npm del proyecto.
+
+INICIAR EL PROYECTO
+-------------------
+
+1. Abre una terminal en la carpeta del proyecto (la que contiene
+   package.json, server.js y este archivo).
+2. Si es la primera vez o faltan dependencias, ejecuta:
+
+     npm install
+
+3. Asegurate de que el servicio de MongoDB local este iniciado.
+4. Inicia la API:
+
+     npm run dev
+
+5. Deja abierta esa terminal mientras pruebas. La API escucha en el puerto
+   3000. Para comprobarla, abre http://localhost:3000/ en el navegador.
+
+HACER TODO EL CRUD DESDE NODE.JS EN VS CODE
+-------------------------------------------
+
+Se usara un archivo cliente llamado prueba-crud.js. Node.js ejecuta el
+archivo; fetch envia solicitudes HTTP a la API Express. El CRUD y el acceso
+a MongoDB permanecen implementados en routes/cursos.js, models/curso.js
+y server.js.
+
+1. Abre una terminal integrada de VS Code en la carpeta que contiene
+   package.json y deja la API ejecutandose:
+
+     npm run dev
+
+2. Abre una segunda terminal integrada en esa misma carpeta y crea un archivo
+   nuevo llamado prueba-crud.js. Pega este codigo:
+
+   const API = 'http://localhost:3000/cursos';
+
+   async function pedir(ruta, metodo = 'GET', datos) {
+     const respuesta = await fetch(`${API}${ruta}`, {
+       method: metodo,
+       headers: { 'Content-Type': 'application/json' },
+       body: datos ? JSON.stringify(datos) : undefined
+     });
+     const resultado = await respuesta.json();
+     if (!respuesta.ok) throw new Error(JSON.stringify(resultado));
+     return resultado;
+   }
+
+   async function probarCRUD() {
+     // CREATE: crea un curso con un profesor y dos estudiantes.
+     const curso = await pedir('', 'POST', {
+       nombre: 'Matematicas',
+       descripcion: 'Curso de prueba',
+       profesor: { nombre: 'Laura Perez', email: 'laura@correo.com' },
+       estudiantes: [
+         { nombre: 'Andres Diaz', email: 'andres@correo.com' },
+         { nombre: 'Sofia Ruiz', email: 'sofia@correo.com' }
+       ]
+     });
+     console.log('CREATE - curso creado:', curso._id);
+
+     // READ: consulta todos los cursos y el curso que se acaba de crear.
+     const cursos = await pedir('');
+     console.log('READ - cantidad de cursos:', cursos.length);
+     console.log('READ - curso creado:', await pedir(`/${curso._id}`));
+
+     // UPDATE: cambia la descripcion del curso de prueba.
+     const actualizado = await pedir(`/${curso._id}`, 'PUT', {
+       descripcion: 'Descripcion actualizada'
+     });
+     console.log('UPDATE - nueva descripcion:', actualizado.descripcion);
+
+     // DELETE: elimina solo el curso creado por este ejemplo.
+     console.log('DELETE -', await pedir(`/${curso._id}`, 'DELETE'));
+   }
+
+   probarCRUD().catch((error) => {
+     console.error('Error al probar el CRUD:', error.message);
+     process.exitCode = 1;
+   });
+
+3. Guarda prueba-crud.js y ejecutalo en la segunda terminal:
+
+     node prueba-crud.js
+
+4. Debes ver mensajes CREATE, READ, UPDATE y DELETE. El ejemplo elimina al
+   final solo el curso que acaba de crear; los demas cursos no se borran.
+
+5. Verifica los documentos en MongoDB Compass: conectate a
+   mongodb://127.0.0.1:27017 y abre prueba-colegio > cursos.
+
+Si aparece "fetch failed", confirma que npm run dev sigue activo en la
+primera terminal y que MongoDB local esta iniciado.
+
+NOTA SOBRE EL DRIVER
+--------------------
+
+Este proyecto usa Mongoose, que utiliza el driver de MongoDB para Node.js.
+prueba-crud.js no se conecta directamente a la base: llama a la API local,
+y la API usa Mongoose para guardar o consultar documentos. Asi se prueba el
+CRUD por las mismas rutas que utiliza la aplicacion.
+
+RESPUESTAS COMUNES
+------------------
+
+  200: consulta, actualizacion o eliminacion correcta.
+  201: curso creado correctamente.
+  400: datos incorrectos o ID no valido.
+  404: no existe un curso con ese ID.
+
+DONDE VER LOS DOCUMENTOS
+------------------------
+
+En MongoDB Compass, conectate a:
+
+  mongodb://127.0.0.1:27017
+
+Abre la base prueba-colegio y luego la coleccion cursos. Cada documento
+contiene el curso, el profesor y la lista de estudiantes.
