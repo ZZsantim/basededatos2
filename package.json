@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "API REST para administrar cursos, profesores y estudiantes",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",

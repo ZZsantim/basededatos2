@@ -1,6 +1,8 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const Curso = require('./models/curso');
+const Profesor = require('./models/profesor');
+const Estudiante = require('./models/estudiante');
 
 const persona = (nombre) => ({
   nombre,
@@ -25,12 +27,21 @@ const cursos = [
   estudiantes: estudiantes.map(persona)
 }));
 
+const profesores = cursos.map((curso) => curso.profesor);
+const estudiantes = cursos.flatMap((curso) => curso.estudiantes);
+
 async function seed() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
+    await Profesor.deleteMany({});
+    await Estudiante.deleteMany({});
     await Curso.deleteMany({});
-    const creados = await Curso.insertMany(cursos);
-    console.log(`Se insertaron ${creados.length} cursos`);
+
+    const profesoresCreados = await Profesor.insertMany(profesores);
+    const estudiantesCreados = await Estudiante.insertMany(estudiantes);
+    const cursosCreados = await Curso.insertMany(cursos);
+
+    console.log(`Se insertaron ${profesoresCreados.length} profesores, ${estudiantesCreados.length} estudiantes y ${cursosCreados.length} cursos`);
   } catch (error) {
     console.error('Error en el seed:', error.message);
     process.exitCode = 1;

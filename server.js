@@ -1,22 +1,21 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cursosRouter = require('./routes/cursos');
+import express from 'express';
+import estudianteRouter from './routes/estudiantes.js';
+import profesorRouter from './routes/profesores.js';
+import cursoRouter from './routes/cursos.js';
+
 
 const app = express();
 app.use(express.json());
-
-app.use('/cursos', cursosRouter);
+app.use('/profesores', profesorRouter);
+app.use('/cursos', cursoRouter);
+app.use('/estudiantes', estudianteRouter);
 
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API-REST-TRABAJO funcionando' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('Conectado a MongoDB');
-    app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
-  })
-  .catch((error) => console.error('Error al conectar con MongoDB:', error.message));
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en http://localhost:${PORT}`);
+});
